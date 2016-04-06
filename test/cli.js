@@ -14,6 +14,12 @@ var cliPath = path.join(__dirname, '../cli.js');
 chalk.enabled = true;
 var colors = require('../lib/colors');
 
+var hasChokidar = false;
+try {
+	require('chokidar');
+	hasChokidar = true;
+} catch (err) {}
+
 function execCli(args, opts, cb) {
 	var dirname;
 	var env;
@@ -149,12 +155,6 @@ test('pkg-conf: cli takes precedence', function (t) {
 test('watcher works', function (t) {
 	var killed = false;
 
-	var hasChokidar = false;
-	try {
-		require('chokidar');
-		hasChokidar = true;
-	} catch (err) {}
-
 	var child = execCli(['--verbose', '--watch', 'test.js'], {dirname: 'fixture/watcher'}, function (err, stdout) {
 		if (err && err.code === 1 && !hasChokidar) {
 			t.comment('chokidar dependency is missing, cannot test watcher');
@@ -183,6 +183,37 @@ test('watcher works', function (t) {
 		}
 	});
 });
+
+if (hasChokidar) {
+	test('"tap": true config is ignored when --watch is given', function (t) {
+		var killed = false;
+
+		var child = execCli(['--watch', 'test.js'], {dirname: 'fixture/watcher/tap-in-conf'}, function () {
+			t.ok(killed);
+			t.end();
+		});
+
+		var combined = '';
+		var testOutput = function (output) {
+			combined += output;
+			t.notMatch(combined, /TAP/);
+			if (/works/.test(combined)) {
+				child.kill();
+				killed = true;
+			}
+		};
+		child.stdout.on('data', testOutput);
+		child.stderr.on('data', testOutput);
+	});
+
+	test('bails when --tap reporter is used while --watch is given', function (t) {
+		execCli(['--tap', '--watch', 'test.js'], {dirname: 'fixture/watcher'}, function (err, stdout, stderr) {
+			t.is(err.code, 1);
+			t.match(stderr, 'The TAP reporter is not available when using watch mode.');
+			t.end();
+		});
+	});
+}
 
 test('--match works', function (t) {
 	execCli(['-m=foo', '-m=bar', '-m=!baz', '-m=t* a* f*', '-m=!t* a* n* f*', 'fixture/matcher-skip.js'], function (err) {

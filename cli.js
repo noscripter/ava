@@ -116,6 +116,11 @@ if (cli.flags.init) {
 	return;
 }
 
+if (cli.flags.watch && cli.flags.tap && !conf.tap) {
+	console.error('  ' + colors.error(figures.cross) + ' The TAP reporter is not available when using watch mode.');
+	process.exit(1);
+}
+
 var api = new Api({
 	failFast: cli.flags.failFast,
 	serial: cli.flags.serial,
@@ -129,7 +134,7 @@ var api = new Api({
 
 var reporter;
 
-if (cli.flags.tap) {
+if (cli.flags.tap && !cli.flags.watch) {
 	reporter = tapReporter();
 } else if (cli.flags.verbose || isCi) {
 	reporter = verboseReporter();
