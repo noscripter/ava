@@ -34,7 +34,9 @@
   "scripts": {
     "test": "xo && nyc --cache --reporter=lcov --reporter=text tap --no-cov --timeout=150 test/*.js test/reporters/*.js",
     "test-win": "tap --no-cov --reporter=classic --timeout=150 test/*.js test/reporters/*.js",
-    "visual": "node test/visual/run-visual-tests.js"
+    "visual": "node test/visual/run-visual-tests.js",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "files": [
     "lib",
@@ -135,7 +137,8 @@
     "strip-bom": "^2.0.0",
     "time-require": "^0.1.2",
     "unique-temp-dir": "^1.0.0",
-    "update-notifier": "^0.6.0"
+    "update-notifier": "^0.6.0",
+    "snyk": "^1.189.0"
   },
   "devDependencies": {
     "cli-table2": "^0.2.0",
@@ -165,5 +168,6 @@
     "ignore": [
       "bench/*/*.js"
     ]
-  }
+  },
+  "snyk": true
 }
